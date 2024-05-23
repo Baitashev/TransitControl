@@ -484,8 +484,8 @@ public:
 
     }
     void registerExpeditor() {
-        int vehicleId, issueDate, expiryDate, drivingExperience;
-        std::string firstName, lastName, birthDate, address, licenseNumber, contactPhone;
+        int vehicleId;
+        std::string firstName, lastName, birthDate, address, licenseNumber, contactPhone, issueDate, expiryDate;
 
         // Запрос пользователю ввести данные о водителе
         std::cout << "Enter First Name: ";
@@ -507,11 +507,9 @@ public:
         std::cin >> issueDate;
         std::cout << "Enter Expiry Date (YYYY-MM-DD): ";
         std::cin >> expiryDate;
-        std::cout << "Enter Driving Experience: ";
-        std::cin >> drivingExperience;
 
         // Подготовка SQL-запроса
-        std::string query = "INSERT INTO Expeditor (firstName, lastName, birthDate, licenseNumber, vehicleId, address, contactPhone, issueDate, expiryDate, drivingExperience) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+        std::string query = "INSERT INTO Expeditor (firstName, lastName, birthDate, licenseNumber, vehicleId, address, contactPhone, issueDate, expiryDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
         sqlite3_stmt* stmt;
         int rc = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr);
@@ -528,9 +526,8 @@ public:
         sqlite3_bind_int(stmt, 5, vehicleId);
         sqlite3_bind_text(stmt, 6, address.c_str(), -1, SQLITE_TRANSIENT);
         sqlite3_bind_text(stmt, 7, contactPhone.c_str(), -1, SQLITE_TRANSIENT);
-        sqlite3_bind_int(stmt, 8, issueDate);
-        sqlite3_bind_int(stmt, 9, expiryDate);
-        sqlite3_bind_int(stmt, 10, drivingExperience);
+        sqlite3_bind_text(stmt, 8, issueDate.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 9, expiryDate.c_str(), -1, SQLITE_TRANSIENT);
 
         // Выполнение запроса
         rc = sqlite3_step(stmt);
@@ -541,6 +538,7 @@ public:
         // Завершение работы с запросом
         sqlite3_finalize(stmt);
     }
+
 
     
     
@@ -633,6 +631,49 @@ public:
         // Завершение работы с запросом
         sqlite3_finalize(stmt);
     }
+    void searchClient() {
+        int id;
+
+        // Запрос пользователю ввести идентификатор клиента для поиска
+        std::cout << "Enter Client ID to search: ";
+        std::cin >> id;
+        std::cin.ignore(); // Игнорируем оставшийся символ новой строки после ввода числа
+
+        // Подготовка SQL-запроса
+        std::string query = "SELECT id, name, contactInfo FROM Client WHERE id = ?;";
+
+        sqlite3_stmt* stmt;
+        int rc = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr);
+        if (rc != SQLITE_OK) {
+            std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+            return;
+        }
+
+        // Привязка параметра
+        sqlite3_bind_int(stmt, 1, id);
+
+        // Выполнение запроса и получение результата
+        rc = sqlite3_step(stmt);
+        if (rc == SQLITE_ROW) {
+            // Извлечение данных
+            int id = sqlite3_column_int(stmt, 0);
+            const unsigned char* name = sqlite3_column_text(stmt, 1);
+            const unsigned char* contactInfo = sqlite3_column_text(stmt, 2);
+
+            // Вывод данных
+            std::cout << "ID: " << id << std::endl;
+            std::cout << "Name: " << name << std::endl;
+            std::cout << "Contact Info: " << contactInfo << std::endl;
+            std::cout << std::endl;
+        }
+        else {
+            std::cerr << "Client with ID " << id << " not found." << std::endl;
+        }
+
+        // Завершение работы с запросом
+        sqlite3_finalize(stmt);
+    }
+
 };
 
 
@@ -675,9 +716,9 @@ void showMenu() {
     std::cout << "5. Зарегистрировать исполнителя" << std::endl;
     std::cout << "6. Заказы" << std::endl;
     //std::cout << "6. Update Expeditor Info" << std::endl;
-    std::cout << "7. Поиск водителя" << std::endl;
+    std::cout << "7. Поиск Исполнителя" << std::endl;
     std::cout << "8. Удалить исполнителя " << std::endl;
-    std::cout << "9. Создать отчет по исполнителю" << std::endl;
+    std::cout << "9. Поиск клиента" << std::endl;
     //std::cout << "10. Создать отчет?" << std::endl;
     std::cout << "11. Зарегистрировать заказ" << std::endl;
     std::cout << "12. Зарегистрировать клиента" << std::endl;
@@ -739,7 +780,7 @@ int main() {
             dispatcher.deleteExpeditor();
             break;
         case 9:
-            dispatcher.viewReport();
+            dispatcher.searchClient();
             break;
         /*case 10:
             break;*/
