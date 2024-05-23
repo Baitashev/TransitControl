@@ -1,2 +1,3 @@
 ﻿  курсовая работа ООП.cpp
-  курсовая работа ООП.vcxproj -> C:\Users\User\source\repos\курсовая работа ООП\Debug\курсовая работа ООП.exe
+C:\Users\User\source\repos\курсовая работа ООП\курсовая работа ООП\курсовая работа ООП.cpp(534,39): error C2660: Dispatcher::registerClient: функция не принимает 0 аргументов
+C:\Users\User\source\repos\курсовая работа ООП\курсовая работа ООП\курсовая работа ООП.cpp(419,10): message : см. объявление "Dispatcher::registerClient"
