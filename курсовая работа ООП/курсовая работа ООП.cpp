@@ -227,6 +227,149 @@ public:
         
 
     }
+    void editExpeditor() {
+        int id;
+        std::string firstName, lastName, birthDate, licenseNumber, address, contactPhone, issueDate, expiryDate;
+        int vehicleId;
+
+        // Запрос пользователю ввести идентификатор экспедитора для редактирования
+        std::cout << "Enter Expeditor ID to edit: ";
+        std::cin >> id;
+        std::cin.ignore(); // Игнорируем оставшийся символ новой строки после ввода числа
+
+        // Проверка существования водителя с данным идентификатором
+        std::string checkQuery = "SELECT COUNT(*) FROM Expeditor WHERE id = ?;";
+        sqlite3_stmt* checkStmt;
+        int rc = sqlite3_prepare_v2(db, checkQuery.c_str(), -1, &checkStmt, nullptr);
+        if (rc != SQLITE_OK) {
+            std::cerr << "Failed to prepare check statement: " << sqlite3_errmsg(db) << std::endl;
+            return;
+        }
+        sqlite3_bind_int(checkStmt, 1, id);
+
+        rc = sqlite3_step(checkStmt);
+        if (rc == SQLITE_ROW && sqlite3_column_int(checkStmt, 0) == 0) {
+            std::cerr << "Expeditor with ID " << id << " does not exist." << std::endl;
+            sqlite3_finalize(checkStmt);
+            return;
+        }
+        sqlite3_finalize(checkStmt);
+
+        // Запрос новых данных у пользователя
+        std::cout << "Enter First Name: ";
+        std::getline(std::cin, firstName);
+        std::cout << "Enter Last Name: ";
+        std::getline(std::cin, lastName);
+        std::cout << "Enter Birth Date (YYYY-MM-DD): ";
+        std::getline(std::cin, birthDate);
+        std::cout << "Enter License Number: ";
+        std::getline(std::cin, licenseNumber);
+        std::cout << "Enter Vehicle ID: ";
+        std::cin >> vehicleId;
+        std::cin.ignore(); // Игнорируем оставшийся символ новой строки после ввода числа
+        std::cout << "Enter Address: ";
+        std::getline(std::cin, address);
+        std::cout << "Enter Contact Phone: ";
+        std::getline(std::cin, contactPhone);
+        std::cout << "Enter Issue Date (YYYY-MM-DD): ";
+        std::getline(std::cin, issueDate);
+        std::cout << "Enter Expiry Date (YYYY-MM-DD): ";
+        std::getline(std::cin, expiryDate);
+
+        // Подготовка SQL-запроса
+        std::string query = "UPDATE Expeditor SET firstName = ?, lastName = ?, birthDate = ?, licenseNumber = ?, vehicleId = ?, address = ?, contactPhone = ?, issueDate = ?, expiryDate = ? WHERE id = ?;";
+
+        sqlite3_stmt* stmt;
+        rc = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr);
+        if (rc != SQLITE_OK) {
+            std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+            return;
+        }
+
+        // Привязка параметров
+        sqlite3_bind_text(stmt, 1, firstName.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 2, lastName.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 3, birthDate.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 4, licenseNumber.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_int(stmt, 5, vehicleId);
+        sqlite3_bind_text(stmt, 6, address.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 7, contactPhone.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 8, issueDate.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 9, expiryDate.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_int(stmt, 10, id);
+
+        // Выполнение запроса
+        rc = sqlite3_step(stmt);
+        if (rc != SQLITE_DONE) {
+            std::cerr << "Failed to execute statement: " << sqlite3_errmsg(db) << std::endl;
+        }
+        else {
+            std::cout << "Expeditor updated successfully." << std::endl;
+        }
+
+        // Завершение работы с запросом
+        sqlite3_finalize(stmt);
+    }
+    void searchExpeditor() {
+        int id;
+
+        // Запрос пользователю ввести идентификатор экспедитора для поиска
+        std::cout << "Enter Expeditor ID to search: ";
+        std::cin >> id;
+        std::cin.ignore(); // Игнорируем оставшийся символ новой строки после ввода числа
+
+        // Подготовка SQL-запроса
+        std::string query = "SELECT id, firstName, lastName, birthDate, licenseNumber, vehicleId, address, contactPhone, issueDate, expiryDate, drivingExperience FROM Expeditor WHERE id = ?;";
+
+        sqlite3_stmt* stmt;
+        int rc = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr);
+        if (rc != SQLITE_OK) {
+            std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+            return;
+        }
+
+        // Привязка параметра
+        sqlite3_bind_int(stmt, 1, id);
+
+        // Выполнение запроса и получение результата
+        rc = sqlite3_step(stmt);
+        if (rc == SQLITE_ROW) {
+            // Извлечение данных
+            int id = sqlite3_column_int(stmt, 0);
+            const unsigned char* firstName = sqlite3_column_text(stmt, 1);
+            const unsigned char* lastName = sqlite3_column_text(stmt, 2);
+            const unsigned char* birthDate = sqlite3_column_text(stmt, 3);
+            const unsigned char* licenseNumber = sqlite3_column_text(stmt, 4);
+            int vehicleId = sqlite3_column_int(stmt, 5);
+            const unsigned char* address = sqlite3_column_text(stmt, 6);
+            const unsigned char* contactPhone = sqlite3_column_text(stmt, 7);
+            const unsigned char* issueDate = sqlite3_column_text(stmt, 8);
+            const unsigned char* expiryDate = sqlite3_column_text(stmt, 9);
+            int drivingExperience = sqlite3_column_int(stmt, 10);
+
+            // Вывод данных
+            std::cout << "ID: " << id << std::endl;
+            std::cout << "First Name: " << firstName << std::endl;
+            std::cout << "Last Name: " << lastName << std::endl;
+            std::cout << "Birth Date: " << birthDate << std::endl;
+            std::cout << "License Number: " << licenseNumber << std::endl;
+            std::cout << "Vehicle ID: " << vehicleId << std::endl;
+            std::cout << "Address: " << address << std::endl;
+            std::cout << "Contact Phone: " << contactPhone << std::endl;
+            std::cout << "Issue Date: " << issueDate << std::endl;
+            std::cout << "Expiry Date: " << expiryDate << std::endl;
+            std::cout << "Driving Experience: " << drivingExperience << std::endl;
+            std::cout << std::endl;
+        }
+        else {
+            std::cerr << "Expeditor with ID " << id << " not found." << std::endl;
+        }
+
+        // Завершение работы с запросом
+        sqlite3_finalize(stmt);
+    }
+
+
 
     void viewRegisteredDrivers() {
         setlocale(LC_ALL, "rus");
@@ -528,11 +671,11 @@ void showMenu() {
     std::cout << "1. Исполнители" << std::endl;
     std::cout << "2. Автомобили" << std::endl;
     std::cout << "3. Клиенты" << std::endl;
-    //std::cout << "4. Generate Waybill" << std::endl;
+    std::cout << "4. Изменить информацию об исполнителе" << std::endl;
     std::cout << "5. Зарегистрировать исполнителя" << std::endl;
     std::cout << "6. Заказы" << std::endl;
-   /* std::cout << "6. Update Expeditor Info" << std::endl;
-    std::cout << "7. View Transportation Info" << std::endl;*/
+    //std::cout << "6. Update Expeditor Info" << std::endl;
+    std::cout << "7. Поиск водителя" << std::endl;
     std::cout << "8. Удалить исполнителя " << std::endl;
     std::cout << "9. Создать отчет по исполнителю" << std::endl;
     //std::cout << "10. Создать отчет?" << std::endl;
@@ -580,17 +723,18 @@ int main() {
         case 3:
             dispatcher.viewRegisteredClients();
             break;
-        //case 4:
-            //break;
+        case 4:
+            dispatcher.editExpeditor();
+            break;
         case 5:
             dispatcher.registerExpeditor();
             break;
         case 6:
             dispatcher.viewRegisteredOrders();
             break;
-        //case 7:
-        //    dispatcher.viewTransportationInfo();
-        //    break;
+        case 7:
+            dispatcher.searchExpeditor();
+            break;
         case 8:
             dispatcher.deleteExpeditor();
             break;
