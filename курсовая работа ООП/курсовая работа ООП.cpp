@@ -371,10 +371,7 @@ public:
     void viewReport() {
         // Ваш код для просмотра отчета
     }
-    void registerClient()
-    {
-
-    }
+   
     void registerOrder() {
         int clientId, expeditorId, freightId;
         std::string startDate, endDate;
@@ -420,8 +417,45 @@ public:
         // Завершение работы с запросом
         sqlite3_finalize(stmt);
     }
-    void registerClient(Client client) {
-        // Ваш код для регистрации клиента
+    void registerClient() {
+        int id;
+        std::string name, contactInfo;
+
+        // Запрос пользователю ввести данные о клиенте
+        std::cout << "Enter Client ID: ";
+        std::cin >> id;
+        std::cin.ignore(); // Игнорируем оставшийся символ новой строки после ввода числа
+        std::cout << "Enter Name: ";
+        std::getline(std::cin, name); // Используем getline для ввода строки с пробелами
+        std::cout << "Enter Contact Info: ";
+        std::getline(std::cin, contactInfo);
+
+        // Подготовка SQL-запроса
+        std::string query = "INSERT INTO Client (id, name, contactInfo) VALUES (?, ?, ?);";
+
+        sqlite3_stmt* stmt;
+        int rc = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr);
+        if (rc != SQLITE_OK) {
+            std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+            return;
+        }
+
+        // Привязка параметров
+        sqlite3_bind_int(stmt, 1, id);
+        sqlite3_bind_text(stmt, 2, name.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 3, contactInfo.c_str(), -1, SQLITE_TRANSIENT);
+
+        // Выполнение запроса
+        rc = sqlite3_step(stmt);
+        if (rc != SQLITE_DONE) {
+            std::cerr << "Failed to execute statement: " << sqlite3_errmsg(db) << std::endl;
+        }
+        else {
+            std::cout << "Client registered successfully." << std::endl;
+        }
+
+        // Завершение работы с запросом
+        sqlite3_finalize(stmt);
     }
 };
 
