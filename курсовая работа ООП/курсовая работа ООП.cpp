@@ -73,21 +73,21 @@ public:
 
     Expeditor(int _id, const std::string& _firstName, const std::string& _lastName, const std::string& _birthDate, const std::string& _address, const std::string& _contactPhone, const std::string& _licenseNumber, const std::string& _issueDate, const std::string& _expiryDate)
         : id(_id), firstName(_firstName), lastName(_lastName), birthDate(_birthDate), address(_address), contactPhone(_contactPhone), licenseNumber(_licenseNumber), issueDate(_issueDate), expiryDate(_expiryDate) {
-        drivingExperience = calculateDrivingExperience(_issueDate);
+        //drivingExperience = calculateDrivingExperience(_issueDate);
     }
 
-private:
-    int calculateDrivingExperience(const std::string& issueDate) {
-        std::istringstream iss(issueDate);
-        std::tm issueTm = {};
-        iss >> std::get_time(&issueTm, "%Y-%m-%d");
-        std::time_t issueTime = std::mktime(&issueTm);
-
-        std::time_t now = std::time(nullptr);
-        double seconds = std::difftime(now, issueTime);
-        int years = static_cast<int>(seconds / (60 * 60 * 24 * 365.25));
-        return years;
-    }
+//private:
+//    int calculateDrivingExperience(const std::string& issueDate) {
+//        std::istringstream iss(issueDate);
+//        std::tm issueTm = {};
+//        iss >> std::get_time(&issueTm, "%Y-%m-%d");
+//        std::time_t issueTime = std::mktime(&issueTm);
+//
+//        std::time_t now = std::time(nullptr);
+//        double seconds = std::difftime(now, issueTime);
+//        int years = static_cast<int>(seconds / (60 * 60 * 24 * 365.25));
+//        return years;
+//    }
 };
 
 class Freight {
@@ -149,6 +149,39 @@ public:
 
 class Dispatcher {
 public:
+    void deleteExpeditor() {
+        int id;
+
+        // Запрос пользователю ввести идентификатор экспедитора
+        std::cout << "Enter Expeditor ID to delete: ";
+        std::cin >> id;
+
+        // Подготовка SQL-запроса
+        std::string query = "DELETE FROM Expeditor WHERE id = ?;";
+
+        sqlite3_stmt* stmt;
+        int rc = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr);
+        if (rc != SQLITE_OK) {
+            std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+            return;
+        }
+
+        // Привязка параметра
+        sqlite3_bind_int(stmt, 1, id);
+
+        // Выполнение запроса
+        rc = sqlite3_step(stmt);
+        if (rc != SQLITE_DONE) {
+            std::cerr << "Failed to execute statement: " << sqlite3_errmsg(db) << std::endl;
+        }
+        else {
+            std::cout << "Expeditor deleted successfully." << std::endl;
+        }
+
+        // Завершение работы с запросом
+        sqlite3_finalize(stmt);
+    }
+
     void viewRegisteredOrders()
     {
         
@@ -495,7 +528,7 @@ void showMenu() {
     std::cout << "1. Исполнители" << std::endl;
     std::cout << "2. Автомобили" << std::endl;
     std::cout << "3. Клиенты" << std::endl;
-    std::cout << "4. Generate Waybill" << std::endl;
+    //std::cout << "4. Generate Waybill" << std::endl;
     std::cout << "5. Зарегистрировать исполнителя" << std::endl;
     std::cout << "6. Заказы" << std::endl;
    /* std::cout << "6. Update Expeditor Info" << std::endl;
@@ -547,8 +580,8 @@ int main() {
         case 3:
             dispatcher.viewRegisteredClients();
             break;
-        case 4:
-            break;
+        //case 4:
+            //break;
         case 5:
             dispatcher.registerExpeditor();
             break;
@@ -559,6 +592,7 @@ int main() {
         //    dispatcher.viewTransportationInfo();
         //    break;
         case 8:
+            dispatcher.deleteExpeditor();
             break;
         case 9:
             dispatcher.viewReport();
